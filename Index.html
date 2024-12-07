@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+        input, button {
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+        }
+        button {
+            background-color: #5e9e62;
+            color: white;
+            border: none;
+        }
+        .meter-container {
+            margin-top: 20px;
+            width: 80%;
+            height: 20px;
+            border-radius: 10px;
+            background-color: #ccc;
+        }
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            border-radius: 10px;
+        }
+        .feedback {
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        .strength-message {
+            color: #888;
+        }
+        .suggestions {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .tooltip {
+            cursor: pointer;
+            color: #3498db;
+            text-decoration: underline;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 180px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -90px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Password Strength Checker</h1>
+    <input type="password" id="password" placeholder="Enter your password" oninput="checkPassword()">
+    <button onclick="togglePassword()">👁️ Show Password</button>
+
+    <div class="meter-container">
+        <div id="strength-bar" class="strength-bar"></div>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+    <div id="password-result"></div>
+
+    <div class="suggestions">
+        <h3>Suggestions:</h3>
+        <ul id="suggestions-list">
+            <!-- Suggestions will go here -->
+        </ul>
+    </div>
+
+<script>
+    let passwordField = document.getElementById('password');
+    let strengthBar = document.getElementById('strength-bar');
+    let feedbackDiv = document.getElementById('feedback');
+    let resultDiv = document.getElementById('password-result');
+    let suggestionsList = document.getElementById('suggestions-list');
+    
+    // Password history to prevent reuse (simple localStorage version)
+    let passwordHistory = JSON.parse(localStorage.getItem('passwordHistory')) || [];
+    
+    // Function to toggle password visibility
+    function togglePassword() {
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+        } else {
+            passwordField.type = "password";
+        }
+    }
+
+    // Check password strength
+    function checkPassword() {
+        const password = passwordField.value;
+        let strength = 0;
+        let feedback = [];
+        let suggestions = [];
+        let score = 0;
+
+        // Length check
+        if (password.length >= 12) {
+            strength += 2;
+        } else {
+            suggestions.push("Consider making your password at least 12 characters long.");
+        }
+
+        // Character variety checks
+        if (/[A-Z]/.test(password)) {
+            strength++;
+        } else {
+            suggestions.push("Add at least one uppercase letter.");
+        }
+
+        if (/[a-z]/.test(password)) {
+            strength++;
+        } else {
+            suggestions.push("Add at least one lowercase letter.");
+        }
+
+        if (/\d/.test(password)) {
+            strength++;
+        } else {
+            suggestions.push("Add at least one number.");
+        }
+
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            strength++;
+        } else {
+            suggestions.push("Add at least one special character.");
+        }
+
+        // Check for common patterns and dictionary words
+        if (/(123|password|qwerty|abc)/i.test(password)) {
+            feedback.push("Avoid common patterns like '123' or 'password'.");
+        } else {
+            strength += 2;
+        }
+
+        // Repeated characters (e.g., 'aaa', '111')
+        if (/(.)\1{2,}/.test(password)) {
+            feedback.push("Avoid repeating characters like 'aaa' or '111'.");
+        }
+
+        // History check - prevent reuse
+        if (passwordHistory.includes(password)) {
+            feedback.push("This password has been used before. Please choose a new one.");
+        } else {
+            passwordHistory.push(password);
+            localStorage.setItem('passwordHistory', JSON.stringify(passwordHistory));
+        }
+
+        // Password strength result
+        if (strength === 10) {
+            resultDiv.textContent = "Strength: Very Strong";
+            strengthBar.style.width = "100%";
+            strengthBar.style.backgroundColor = "green";
+        } else if (strength >= 7) {
+            resultDiv.textContent = "Strength: Strong";
+            strengthBar.style.width = "75%";
+            strengthBar.style.backgroundColor = "lightgreen";
+        } else if (strength >= 5) {
+            resultDiv.textContent = "Strength: Moderate";
+            strengthBar.style.width = "50%";
+            strengthBar.style.backgroundColor = "yellow";
+        } else {
+            resultDiv.textContent = "Strength: Weak";
+            strengthBar.style.width = "25%";
+            strengthBar.style.backgroundColor = "red";
+        }
+
+        // Display feedback and suggestions
+        feedbackDiv.innerHTML = feedback.join("<br>");
+        suggestionsList.innerHTML = suggestions.map(item => `<li>${item}</li>`).join('');
+    }
+</script>
+
+</body>
+</html>
+
+
